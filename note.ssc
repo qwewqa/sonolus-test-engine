@@ -5,9 +5,12 @@ const NOTE_SIZE = 0.4
 const PERFECT_WINDOW = 0.050
 const GREAT_WINDOW = 0.100
 const GOOD_WINDOW = 0.120
+const BURST_DURATION = 0.1
+const NOTE_BURST_SCALE = 1.5
+const TARGET_BURST_SCALE = 2
 
 const NOTE_SPRITE = 1001
-const SLOT_SPRITE = 41001
+const TARGET_SPRITE = 41001
 
 archetype BasicNote :: #Note(targetX = 0, targetY = 0,
                             spawnDistance = 1.5, angle = 0, preemptTime = 0.7,
@@ -43,7 +46,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(SLOT_SPRITE, 100, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100, alpha)
         Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ, alpha)
 
         if (timeToTarget < -GOOD_WINDOW) {
@@ -61,23 +64,39 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
                 hit = true
                 judgement = judge(now, targetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
                 play(judgement, 0)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 0)
+                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 0)
             }
         }
     }
 }
 
-script Effect() {
-    spawninit val s_effectTime
-    inline val effectTime = Number(s_effectTime)
+script Burst() {
+    spawninit val _sprite
+    spawninit val _duration
+    spawninit val _endScale
+    spawninit val _x
+    spawninit val _y
+    spawninit val _startWidth
+    spawninit val _startHeight
+    spawninit val _z
+    inline val sprite = Number(_sprite)
+    inline val duration = Number(_duration)
+    inline val endScale = Number(_endScale)
+    inline val x = Number(_x)
+    inline val y = Number(_y)
+    inline val startWidth = Number(_startWidth)
+    inline val startHeight = Number(_startHeight)
+    inline val z = Number(_z)
 
-    var effectScale = 0.0
-    var effectSize = 0.0
+    val startTime = now
+
+    inline val progress = (now - startTime) / duration
+    inline val scale = 1 + progress * (endScale - 1)
 
     callback updateParallel {
-        if (now - effectTime < 0.3) {
-            effectScale = (now - effectTime) / 0.3
-            effectSize = effectScale * 0.4
-            Rectangle(0, 0, effectSize * 2, effectSize * 2).drawSprite(32006, 1, 1 - effectScale)
+        if (now - startTime <= duration) {
+            Rectangle(x, y, startWidth * scale, startHeight * scale).drawSprite(sprite, z, 1 - progress)
         } else {
             true
         }
