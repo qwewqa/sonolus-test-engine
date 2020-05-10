@@ -4,9 +4,9 @@ import note
 
 const LINE_SPRITE = 41000
 
-archetype TargetLine :: Line(width = 0.06)
+archetype TargetLine :: Line(width = 0.06, affectedByHidden = 1)
 
-script Line(_width, _startX, _startY, _endX, _endY, _startTime, _endTime, _inDuration, _outDuration) {
+script Line(_width, _startX, _startY, _endX, _endY, _startTime, _endTime, _inDuration, _outDuration, _affectedByHidden) {
     inline val width = Number(_width)
     inline val startX = Number(_startX)
     inline val startY = Number(_startY)
@@ -16,18 +16,21 @@ script Line(_width, _startX, _startY, _endX, _endY, _startTime, _endTime, _inDur
     inline val endTime = Number(_endTime)
     inline val inDuration = Number(_inDuration)
     inline val outDuration = Number(_outDuration)
+    inline val affectedByHidden = Boolean(_affectedByHidden)
 
     inline val start = Point(startX, startY)
     inline val end = Point(endX, endY)
 
     inline val inProgress = ((now - startTime) / inDuration).clamp(0, 1)
     inline val outProgress = ((endTime - now) / outDuration).clamp(0, 1)
+    inline val progress = (now - startTime) / duration
 
     val zOffset = startTime / 100 // additional z offset so that stacked notes appear ok
 
     val duration = endTime - startTime
     val head = start
     val tail = start
+    var alpha = 1
 
     callback shouldSpawn {
         now + SPAWN_PREEMPT >= startTime
@@ -35,18 +38,22 @@ script Line(_width, _startX, _startY, _endX, _endY, _startTime, _endTime, _inDur
 
     callback updateParallel {
         if (now >= startTime) {
+            if (hidden && affectedByHidden) {
+                alpha = 1 - progress.clamp(0, 1)
+            }
+
             tail = start.lerp(end, inProgress)
             head = end.lerp(start, outProgress)
 
-            Rectangle(tail, head, width).swapped().drawSprite(LINE_SPRITE, -200 + zOffset, 1)
+            Rectangle(tail, head, width).swapped().drawSprite(LINE_SPRITE, -200 + zOffset, alpha)
         }
         now >= endTime
     }
 }
 
-archetype TargetSlot :: Slot(x = 0.0, y = 0.0, scale = 1.0)
+archetype TargetSlot :: Slot(x = 0.0, y = 0.0, scale = 1.0, affectedByHidden = 1)
 
-script Slot(_x, _y, _scale, _angle, _startTime, _endTime, _inDuration, _outDuration) {
+script Slot(_x, _y, _scale, _angle, _startTime, _endTime, _inDuration, _outDuration, _affectedByHidden) {
     inline val x = Number(_x)
     inline val y = Number(_y)
     inline val scale = Number(_scale)
@@ -54,17 +61,21 @@ script Slot(_x, _y, _scale, _angle, _startTime, _endTime, _inDuration, _outDurat
     inline val endTime = Number(_endTime)
     inline val inDuration = Number(_inDuration)
     inline val outDuration = Number(_outDuration)
+    inline val affectedByHidden = Boolean(_affectedByHidden)
 
     val zOffset = startTime / 100 // additional z offset so that stacked notes appear ok
 
     inline val center = Point(x, y)
     val angle = Number(_angle).toRad
     val size = NOTE_SIZE * scale
+    var maxAlpha = 1
 
     inline val inProgress = ((now - startTime) / inDuration).clamp(0, 1)
     inline val outProgress = ((endTime - now) / outDuration).clamp(0, 1)
+    inline val progress = (now - startTime) / duration
 
-    inline val alpha = min(inProgress, outProgress)
+    inline val alpha = min(inProgress, outProgress).clamp(0, maxAlpha)
+    val duration = endTime - startTime
 
     callback shouldSpawn {
         now + SPAWN_PREEMPT >= startTime
@@ -72,6 +83,10 @@ script Slot(_x, _y, _scale, _angle, _startTime, _endTime, _inDuration, _outDurat
 
     callback updateParallel {
         if (now >= startTime) {
+            if (hidden && affectedByHidden) {
+                maxAlpha = 1 - progress.clamp(0, 1)
+            }
+
             Rectangle(center, size, size, angle).drawSprite(TARGET_SPRITE, -200 + zOffset, alpha)
         }
 

@@ -52,7 +52,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
     inline val timeToAdjustedTarget = adjustedTargetTime - now
-    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, maxAlpha)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
     inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
@@ -62,12 +62,17 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
 
     var hit = false
     var miss = false
+    var maxAlpha = 1
 
     callback shouldSpawn {
         targetTime - now <= preemptTime + SPAWN_PREEMPT
     }
 
     callback updateParallel {
+        if (hidden) {
+            maxAlpha = 1 - progress.clamp(0, 1)
+        }
+
         if (showTarget) {
             Rectangle(targetPosition, visualSize, visualSize, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         }
@@ -88,10 +93,12 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
                 hit = true
                 judgement = judge(now, adjustedTargetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
                 play(judgement, MIN_EFFECT_TIME)
-                if (showTarget) {
-                    Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, visualSize, visualSize, 200 + zOffset, angle)
+                if (showBursts) {
+                    if (showTarget) {
+                        Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, visualSize, visualSize, 200 + zOffset, angle)
+                    }
+                    Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, visualSize, visualSize, 200 + zOffset, angle)
                 }
-                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, visualSize, visualSize, 200 + zOffset, angle)
             }
         }
     }
@@ -123,7 +130,7 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
     inline val timeToAdjustedTarget = adjustedTargetTime - now
-    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, maxAlpha)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
     inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
@@ -133,12 +140,17 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
 
     var hit = false
     var miss = false
+    var maxAlpha = 1
 
     callback shouldSpawn {
         targetTime - now <= preemptTime + SPAWN_PREEMPT
     }
 
     callback updateParallel {
+        if (hidden) {
+            maxAlpha = 1 - progress.clamp(0, 1)
+        }
+
         if (showTarget) {
             Rectangle(targetPosition, visualSize, visualSize, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         }
@@ -154,14 +166,16 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     callback touch {
         if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
                 timeToAdjustedTarget.abs() <= HOLD_WINDOW) {
-                // note that hold notes don't occupy the input
-                hit = true
-                judgement = 1
-                play(1, MIN_EFFECT_TIME)
+            // note that hold notes don't occupy the input
+            hit = true
+            judgement = 1
+            play(1, MIN_EFFECT_TIME)
+            if (showBursts) {
                 if (showTarget) {
                     Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, visualSize, visualSize, 200 + zOffset, angle)
                 }
                 Burst(HOLD_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, visualSize, visualSize, 200 + zOffset, angle)
+            }
         }
     }
 }
@@ -195,7 +209,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
     inline val timeToAdjustedTarget = adjustedTargetTime - now
-    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, maxAlpha)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
     inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
@@ -205,12 +219,17 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
 
     var hit = false
     var miss = false
+    var maxAlpha = 1
 
     callback shouldSpawn {
         targetTime - now <= preemptTime + SPAWN_PREEMPT
     }
 
     callback updateParallel {
+        if (hidden) {
+            maxAlpha = 1 - progress.clamp(0, 1)
+        }
+
         if (showTarget) {
             Rectangle(targetPosition, visualSize, visualSize, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         }
@@ -237,10 +256,12 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
                 hit = true
                 judgement = 1
                 play(FLICK_SOUND, MIN_EFFECT_TIME)
-                if (showTarget) {
-                    Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, visualSize, visualSize, 200 + zOffset, angle)
+                if (showBursts) {
+                    if (showTarget) {
+                        Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, visualSize, visualSize, 200 + zOffset, angle)
+                    }
+                    Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, visualSize, visualSize, 200 + zOffset, angle)
                 }
-                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, visualSize, visualSize, 200 + zOffset, angle)
         }
     }
 }

@@ -1,4 +1,15 @@
-options: []
+options: [
+  {
+    "name": "Hidden",
+    "type": "toggle",
+    "def": 0
+  },
+  {
+    "name": "Note bursts",
+    "type": "toggle",
+    "def": 1
+  }
+]
 include:
   - 'note.ssc'
   - 'manager.ssc'

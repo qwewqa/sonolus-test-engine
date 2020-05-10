@@ -5,6 +5,9 @@ import note
 levelvar l_touchOccupied
 inline var touchOccupied = Boolean(l_touchOccupied)
 
+inline val hidden = getBooleanOption(0)
+inline val showBursts = !hidden and getBooleanOption(1)
+
 script PreGameManager() {
     callback initialize {
     }
