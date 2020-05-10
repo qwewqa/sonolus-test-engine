@@ -37,8 +37,10 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
 
+    inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
+    inline val timeToAdjustedTarget = adjustedTargetTime - now
     inline val alpha = min(spawnedDuration / fadeinTime, 1)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
@@ -58,7 +60,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
         Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100, alpha)
         Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ, alpha)
 
-        if (timeToTarget < -GOOD_WINDOW) {
+        if (timeToAdjustedTarget < -GOOD_WINDOW) {
             miss = true
         }
 
@@ -68,10 +70,10 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     callback touch {
         if (!touchOccupied && touchStarted) {
             if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
-                timeToTarget.abs() <= GOOD_WINDOW) {
+                timeToAdjustedTarget.abs() <= GOOD_WINDOW) {
                 touchOccupied = true
                 hit = true
-                judgement = judge(now, targetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
+                judgement = judge(now, adjustedTargetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
                 play(judgement, MIN_EFFECT_TIME)
                 Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200)
                 Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200)
@@ -99,8 +101,10 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     val indicatorOffset = FLICK_INDICATOR_OFFSET * scale
 
 
+    inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
+    inline val timeToAdjustedTarget = adjustedTargetTime - now
     inline val alpha = min(spawnedDuration / fadeinTime, 1)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
@@ -128,7 +132,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
         Rectangle(notePosition.translated(indicatorOffset, 0), indicatorSize, indicatorSize).rotated(270.rad)
             .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
 
-        if (timeToTarget < -FLICK_WINDOW) {
+        if (timeToAdjustedTarget < -FLICK_WINDOW) {
             miss = true
         }
 
@@ -138,7 +142,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     callback touch {
         if (!touchOccupied) {
             if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
-                timeToTarget.abs() <= FLICK_WINDOW &&
+                timeToAdjustedTarget.abs() <= FLICK_WINDOW &&
                 touchVelocityR >= FLICK_VELOCITY) {
                 touchOccupied = true
                 hit = true
