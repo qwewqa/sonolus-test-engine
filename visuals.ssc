@@ -1,0 +1,80 @@
+import constants
+import manager
+import note
+
+const LINE_SPRITE = 41000
+
+archetype TargetLine :: Line(width = 0.06)
+
+script Line(_width, _startX, _startY, _endX, _endY, _startTime, _endTime, _inDuration, _outDuration) {
+    inline val width = Number(_width)
+    inline val startX = Number(_startX)
+    inline val startY = Number(_startY)
+    inline val endX = Number(_endX)
+    inline val endY = Number(_endY)
+    inline val startTime = Number(_startTime)
+    inline val endTime = Number(_endTime)
+    inline val inDuration = Number(_inDuration)
+    inline val outDuration = Number(_outDuration)
+
+    inline val start = Point(startX, startY)
+    inline val end = Point(endX, endY)
+
+    inline val inProgress = ((now - startTime) / inDuration).clamp(0, 1)
+    inline val outProgress = ((endTime - now) / outDuration).clamp(0, 1)
+
+    val zOffset = startTime / 100 // additional z offset so that stacked notes appear ok
+
+    val duration = endTime - startTime
+    val head = start
+    val tail = start
+
+    callback shouldSpawn {
+        now + SPAWN_PREEMPT >= startTime
+    }
+
+    callback updateParallel {
+        if (now >= startTime) {
+            tail = start.lerp(end, inProgress)
+            head = end.lerp(start, outProgress)
+
+            Rectangle(tail, head, width).swapped().drawSprite(LINE_SPRITE, -200 + zOffset, 1)
+        }
+        now >= endTime
+    }
+}
+
+archetype TargetSlot :: Slot(x = 0.0, y = 0.0, scale = 1.0)
+
+script Slot(_x, _y, _scale, _angle, _startTime, _endTime, _inDuration, _outDuration) {
+    inline val x = Number(_x)
+    inline val y = Number(_y)
+    inline val scale = Number(_scale)
+    inline val startTime = Number(_startTime)
+    inline val endTime = Number(_endTime)
+    inline val inDuration = Number(_inDuration)
+    inline val outDuration = Number(_outDuration)
+
+    val zOffset = startTime / 100 // additional z offset so that stacked notes appear ok
+
+    inline val center = Point(x, y)
+    val angle = Number(_angle).toRad
+    val size = NOTE_SIZE * scale
+
+    inline val inProgress = ((now - startTime) / inDuration).clamp(0, 1)
+    inline val outProgress = ((endTime - now) / outDuration).clamp(0, 1)
+
+    inline val alpha = min(inProgress, outProgress)
+
+    callback shouldSpawn {
+        now + SPAWN_PREEMPT >= startTime
+    }
+
+    callback updateParallel {
+        if (now >= startTime) {
+            Rectangle(center, size, size, angle).drawSprite(TARGET_SPRITE, -200 + zOffset, alpha)
+        }
+
+        now > endTime
+    }
+}

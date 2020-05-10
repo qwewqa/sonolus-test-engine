@@ -7,3 +7,8 @@ const DESPAWNED = 2
 const MIN_EFFECT_TIME = 0.02
 
 const CLIP_EMPTY = 5
+
+// allow spawning things a bit early
+// just a qol for manually written levels so that you don't have to reorder
+// an actual editor would automatically reorder in proper spawn order
+const SPAWN_PREEMPT = 6.0

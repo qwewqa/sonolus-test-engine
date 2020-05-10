@@ -1,7 +1,8 @@
 options: []
 include:
-  - 'note.scc'
-  - 'manager.scc'
+  - 'note.ssc'
+  - 'manager.ssc'
+  - 'visuals.ssc'
 level: 'level.slv'
 configuration:
   menu:
