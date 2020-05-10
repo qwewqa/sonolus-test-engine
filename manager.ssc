@@ -1,0 +1,38 @@
+import constants
+import initialize
+import note
+
+levelvar l_touchOccupied
+inline var touchOccupied = Boolean(l_touchOccupied)
+
+script PreGameManager() {
+    callback initialize {
+    }
+
+    callback shouldSpawn {
+        getNumber(ENTITY_INFO_ARRAY, 2) == DESPAWNED
+    }
+
+    callback touch {
+        touchOccupied = false
+    }
+}
+
+script PostGameManager() {
+    callback initialize {
+    }
+
+    callback shouldSpawn {
+        getNumber(ENTITY_INFO_ARRAY, 2) == DESPAWNED
+    }
+
+    callback @100 touch {
+        if (touchStarted && !touchOccupied) {
+            play(CLIP_EMPTY, MIN_EFFECT_TIME)
+        }
+    }
+}
+
+
+archetype PreManager :: PreGameManager()
+archetype PostManager :: PostGameManager()
