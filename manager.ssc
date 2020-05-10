@@ -7,6 +7,10 @@ inline var touchOccupied = Boolean(l_touchOccupied)
 
 inline val hidden = getBooleanOption(0)
 inline val showBursts = !hidden and getBooleanOption(1)
+inline val sudden = getBooleanOption(2)
+inline val preemptFactor = 1 - SUDDEN_COEF * getNumberOption(2) // hack because too lazy to make if expressions work for now
+
+const SUDDEN_COEF = 0.5
 
 script PreGameManager() {
     callback initialize {

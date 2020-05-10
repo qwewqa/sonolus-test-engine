@@ -8,6 +8,11 @@ options: [
     "name": "Note bursts",
     "type": "toggle",
     "def": 1
+  },
+  {
+    "name": "Sudden",
+    "type": "toggle",
+    "def": 0
   }
 ]
 include:
