@@ -23,8 +23,13 @@ const FLICK_VELOCITY = 1.5
 const FLICK_SOUND = 4
 const FLICK_WINDOW = 0.1
 const FLICK_INDICATOR_SPRITE = 21005
-const FLICK_INDICATOR_OFFSET = NOTE_SIZE * 0.7
-const FLICK_INDICATOR_SIZE = NOTE_SIZE * 0.5
+const FLICK_INDICATOR_OFFSET = NOTE_SIZE * 0.35 // starting offset
+const FLICK_INDICATOR_SIZE = NOTE_SIZE * 0.8
+const FLICK_INDICATOR_WIDTH_FACTOR = 1.25
+const FLICK_INDICATOR_ADDITIONAL_OFFSET = NOTE_SIZE * 0.4 // final offset at progress >= 1
+
+const HOLD_SPRITE = 1003
+const HOLD_WINDOW = 0.08
 
 archetype BasicNote :: #Note(targetX = 0, targetY = 0,
                             spawnDistance = 1.5, angle = 0, preemptTime = 0.7,
@@ -41,6 +46,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     inline val noteZ = Number(_noteZ)
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
+    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
 
     inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
@@ -62,8 +68,8 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100, alpha)
-        Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ + zOffset, alpha)
 
         if (timeToAdjustedTarget < -GOOD_WINDOW) {
             miss = true
@@ -80,9 +86,69 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
                 hit = true
                 judgement = judge(now, adjustedTargetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
                 play(judgement, MIN_EFFECT_TIME)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200)
-                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
+                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
             }
+        }
+    }
+}
+
+archetype HoldNote :: #Hold(targetX = 0, targetY = 0,
+                            spawnDistance = 1.5, angle = 0, preemptTime = 0.7,
+                            fadeinTime = 0.1, scale = 1, noteZ = 0)
+
+script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTime, _fadeinTime, _scale, _noteZ) {
+    inline val targetTime = Number(_targetTime)
+    inline val targetX = Number(_targetX)
+    inline val targetY = Number(_targetY)
+    inline val spawnDistance = Number(_spawnDistance)
+    inline val preemptTime = Number(_preemptTime)
+    inline val fadeinTime = Number(_fadeinTime)
+    inline val scale = Number(_scale)
+    inline val noteZ = Number(_noteZ)
+    val angle = Number(_angle).rad
+    val size = NOTE_SIZE * scale
+    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
+
+    inline val adjustedTargetTime = targetTime + inputOffset
+    inline val spawnedDuration = preemptTime - (targetTime - now)
+    inline val timeToTarget = targetTime - now
+    inline val timeToAdjustedTarget = adjustedTargetTime - now
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
+    inline val progress = spawnedDuration / preemptTime
+    inline val relativePosition = timeToTarget / preemptTime
+    inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
+    inline val noteY = targetY + sin(angle) * spawnDistance * relativePosition
+    inline val notePosition = Point(noteX, noteY)
+    inline val targetPosition = Point(targetX, targetY)
+
+    var hit = false
+    var miss = false
+
+    callback shouldSpawn {
+        targetTime - now <= preemptTime + SPAWN_PREEMPT
+    }
+
+    callback updateParallel {
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(notePosition, size, size).drawSprite(HOLD_SPRITE, noteZ + zOffset, alpha)
+
+        if (timeToAdjustedTarget < -HOLD_WINDOW) {
+            miss = true
+        }
+
+        hit || miss
+    }
+
+    callback touch {
+        if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
+                timeToAdjustedTarget.abs() <= HOLD_WINDOW) {
+                // note that hold notes don't occupy the input
+                hit = true
+                judgement = 1
+                play(1, MIN_EFFECT_TIME)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
+                Burst(HOLD_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
         }
     }
 }
@@ -103,8 +169,9 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
     val indicatorSize = FLICK_INDICATOR_SIZE * scale
-    val indicatorOffset = FLICK_INDICATOR_OFFSET * scale
-
+    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
+    inline val indicatorOffset = (FLICK_INDICATOR_OFFSET * scale +
+                           FLICK_INDICATOR_ADDITIONAL_OFFSET * progress.clamp(0, 1))
 
     inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
@@ -126,16 +193,14 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100, alpha)
-        Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ, alpha)
-        Rectangle(notePosition.translated(0, indicatorOffset), indicatorSize, indicatorSize)
-            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
-        Rectangle(notePosition.translated(-indicatorOffset, 0), indicatorSize, indicatorSize).rotated(90.rad)
-            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
-        Rectangle(notePosition.translated(0, -indicatorOffset), indicatorSize, indicatorSize).rotated(180.rad)
-            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
-        Rectangle(notePosition.translated(indicatorOffset, 0), indicatorSize, indicatorSize).rotated(270.rad)
-            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ + zOffset, alpha)
+        Rectangle(notePosition + Point(0, indicatorOffset).rotated(0.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
+            .rotated(0.rad + angle)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ - 0.1 + zOffset, alpha)
+        Rectangle(notePosition + Point(0, indicatorOffset).rotated(180.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
+            .rotated(180.rad + angle)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ - 0.1 + zOffset, alpha)
 
         if (timeToAdjustedTarget < -FLICK_WINDOW) {
             miss = true
@@ -145,17 +210,15 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     }
 
     callback touch {
-        if (!touchOccupied) {
-            if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
+        if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
                 timeToAdjustedTarget.abs() <= FLICK_WINDOW &&
                 touchVelocityR >= FLICK_VELOCITY) {
-                touchOccupied = true
+                // like holds, these don't occupy input
                 hit = true
                 judgement = 1
                 play(FLICK_SOUND, MIN_EFFECT_TIME)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200)
-                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200)
-            }
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
+                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
         }
     }
 }
