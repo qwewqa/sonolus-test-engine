@@ -46,7 +46,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     inline val noteZ = Number(_noteZ)
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
-    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
+    val zOffset = (targetTime - preemptTime) / 100 // additional z offset so that stacked notes appear ok
 
     inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
@@ -68,7 +68,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ + zOffset, alpha)
 
         if (timeToAdjustedTarget < -GOOD_WINDOW) {
@@ -108,7 +108,7 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     inline val noteZ = Number(_noteZ)
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
-    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
+    val zOffset = (targetTime - preemptTime) / 100 // additional z offset so that stacked notes appear ok
 
     inline val adjustedTargetTime = targetTime + inputOffset
     inline val spawnedDuration = preemptTime - (targetTime - now)
@@ -130,7 +130,7 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         Rectangle(notePosition, size, size).drawSprite(HOLD_SPRITE, noteZ + zOffset, alpha)
 
         if (timeToAdjustedTarget < -HOLD_WINDOW) {
@@ -169,7 +169,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     val angle = Number(_angle).rad
     val size = NOTE_SIZE * scale
     val indicatorSize = FLICK_INDICATOR_SIZE * scale
-    val zOffset = (targetTime - preemptTime) / 100000 // additional z offset so that stacked notes appear ok
+    val zOffset = (targetTime - preemptTime) / 100 // additional z offset so that stacked notes appear ok
     inline val indicatorOffset = (FLICK_INDICATOR_OFFSET * scale +
                            FLICK_INDICATOR_ADDITIONAL_OFFSET * progress.clamp(0, 1))
 
@@ -193,7 +193,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100 + zOffset, alpha)
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ + zOffset, alpha)
         Rectangle(notePosition + Point(0, indicatorOffset).rotated(0.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
             .rotated(0.rad + angle)
