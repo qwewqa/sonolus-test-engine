@@ -68,8 +68,8 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
-        Rectangle(notePosition, size, size).drawSprite(NOTE_SPRITE, noteZ + zOffset, alpha)
+        Rectangle(targetPosition, size, size, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
+        Rectangle(notePosition, size, size, angle).drawSprite(NOTE_SPRITE, noteZ + zOffset, alpha)
 
         if (timeToAdjustedTarget < -GOOD_WINDOW) {
             miss = true
@@ -86,8 +86,8 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
                 hit = true
                 judgement = judge(now, adjustedTargetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
                 play(judgement, MIN_EFFECT_TIME)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
-                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset, angle)
+                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset, angle)
             }
         }
     }
@@ -130,8 +130,8 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
-        Rectangle(notePosition, size, size).drawSprite(HOLD_SPRITE, noteZ + zOffset, alpha)
+        Rectangle(targetPosition, size, size, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
+        Rectangle(notePosition, size, size, angle).drawSprite(HOLD_SPRITE, noteZ + zOffset, alpha)
 
         if (timeToAdjustedTarget < -HOLD_WINDOW) {
             miss = true
@@ -147,8 +147,8 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
                 hit = true
                 judgement = 1
                 play(1, MIN_EFFECT_TIME)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
-                Burst(HOLD_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset, angle)
+                Burst(HOLD_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset, angle)
         }
     }
 }
@@ -193,8 +193,8 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     }
 
     callback updateParallel {
-        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
-        Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ + zOffset, alpha)
+        Rectangle(targetPosition, size, size, angle).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
+        Rectangle(notePosition, size, size, angle).drawSprite(FLICK_SPRITE, noteZ + zOffset, alpha)
         Rectangle(notePosition + Point(0, indicatorOffset * scale).rotated(0.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
             .rotated(0.rad + angle)
             .drawSprite(FLICK_INDICATOR_SPRITE, noteZ - 0.1 + zOffset, alpha)
@@ -217,8 +217,8 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
                 hit = true
                 judgement = 1
                 play(FLICK_SOUND, MIN_EFFECT_TIME)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset)
-                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200 + zOffset, angle)
+                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200 + zOffset, angle)
         }
     }
 }
@@ -232,6 +232,7 @@ script Burst() {
     spawninit val _startWidth
     spawninit val _startHeight
     spawninit val _z
+    spawninit val _angle
     inline val sprite = Number(_sprite)
     inline val duration = Number(_duration)
     inline val endScale = Number(_endScale)
@@ -240,6 +241,7 @@ script Burst() {
     inline val startWidth = Number(_startWidth)
     inline val startHeight = Number(_startHeight)
     inline val z = Number(_z)
+    inline val angle = Number(_angle)
 
     val startTime = now
 
@@ -248,7 +250,7 @@ script Burst() {
 
     callback updateParallel {
         if (now - startTime <= duration) {
-            Rectangle(x, y, startWidth * scale, startHeight * scale).drawSprite(sprite, z, 1 - progress)
+            Rectangle(x, y, startWidth * scale, startHeight * scale, angle).drawSprite(sprite, z, 1 - progress)
         } else {
             true
         }
