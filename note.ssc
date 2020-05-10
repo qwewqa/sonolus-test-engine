@@ -195,10 +195,10 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     callback updateParallel {
         Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, -100 + zOffset, alpha)
         Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ + zOffset, alpha)
-        Rectangle(notePosition + Point(0, indicatorOffset).rotated(0.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
+        Rectangle(notePosition + Point(0, indicatorOffset * scale).rotated(0.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
             .rotated(0.rad + angle)
             .drawSprite(FLICK_INDICATOR_SPRITE, noteZ - 0.1 + zOffset, alpha)
-        Rectangle(notePosition + Point(0, indicatorOffset).rotated(180.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
+        Rectangle(notePosition + Point(0, indicatorOffset * scale).rotated(180.rad + angle), FLICK_INDICATOR_WIDTH_FACTOR * indicatorSize, indicatorSize)
             .rotated(180.rad + angle)
             .drawSprite(FLICK_INDICATOR_SPRITE, noteZ - 0.1 + zOffset, alpha)
 
