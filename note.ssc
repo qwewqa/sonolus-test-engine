@@ -1,6 +1,11 @@
 import manager
 import constants
 
+// allow spawning things a bit early
+// just a qol for manually written levels so that you don't have to reorder
+// an actual editor would automatically reorder in proper spawn order
+const SPAWN_PREEMPT = 6.0
+
 const NOTE_SIZE = 0.4
 const PERFECT_WINDOW = 0.050
 const GREAT_WINDOW = 0.100
@@ -41,7 +46,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
     inline val timeToAdjustedTarget = adjustedTargetTime - now
-    inline val alpha = min(spawnedDuration / fadeinTime, 1)
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
     inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
@@ -53,7 +58,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
     var miss = false
 
     callback shouldSpawn {
-        targetTime - now <= preemptTime
+        targetTime - now <= preemptTime + SPAWN_PREEMPT
     }
 
     callback updateParallel {
@@ -105,7 +110,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     inline val spawnedDuration = preemptTime - (targetTime - now)
     inline val timeToTarget = targetTime - now
     inline val timeToAdjustedTarget = adjustedTargetTime - now
-    inline val alpha = min(spawnedDuration / fadeinTime, 1)
+    inline val alpha = (spawnedDuration / fadeinTime).clamp(0, 1)
     inline val progress = spawnedDuration / preemptTime
     inline val relativePosition = timeToTarget / preemptTime
     inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
@@ -117,7 +122,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTi
     var miss = false
 
     callback shouldSpawn {
-        targetTime - now <= preemptTime
+        targetTime - now <= preemptTime + SPAWN_PREEMPT
     }
 
     callback updateParallel {
