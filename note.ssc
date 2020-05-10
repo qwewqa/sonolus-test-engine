@@ -9,8 +9,17 @@ const BURST_DURATION = 0.1
 const NOTE_BURST_SCALE = 1.5
 const TARGET_BURST_SCALE = 2
 
-const NOTE_SPRITE = 1001
 const TARGET_SPRITE = 41001
+
+const NOTE_SPRITE = 1001
+
+const FLICK_SPRITE = 1005
+const FLICK_VELOCITY = 1.5
+const FLICK_SOUND = 4
+const FLICK_WINDOW = 0.1
+const FLICK_INDICATOR_SPRITE = 21005
+const FLICK_INDICATOR_OFFSET = NOTE_SIZE * 0.7
+const FLICK_INDICATOR_SIZE = NOTE_SIZE * 0.5
 
 archetype BasicNote :: #Note(targetX = 0, targetY = 0,
                             spawnDistance = 1.5, angle = 0, preemptTime = 0.7,
@@ -63,9 +72,80 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTim
                 touchOccupied = true
                 hit = true
                 judgement = judge(now, targetTime, PERFECT_WINDOW, GREAT_WINDOW, GOOD_WINDOW)
-                play(judgement, 0)
-                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 0)
-                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 0)
+                play(judgement, MIN_EFFECT_TIME)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200)
+                Burst(NOTE_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200)
+            }
+        }
+    }
+}
+
+archetype FlickNote :: #Flick(targetX = 0, targetY = 0,
+                            spawnDistance = 1.5, angle = 0, preemptTime = 0.7,
+                            fadeinTime = 0.1, scale = 1, noteZ = 0)
+
+script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle, _preemptTime, _fadeinTime, _scale, _noteZ) {
+    inline val targetTime = Number(_targetTime)
+    inline val targetX = Number(_targetX)
+    inline val targetY = Number(_targetY)
+    inline val spawnDistance = Number(_spawnDistance)
+    inline val preemptTime = Number(_preemptTime)
+    inline val fadeinTime = Number(_fadeinTime)
+    inline val scale = Number(_scale)
+    inline val noteZ = Number(_noteZ)
+    val angle = Number(_angle).rad
+    val size = NOTE_SIZE * scale
+    val indicatorSize = FLICK_INDICATOR_SIZE * scale
+    val indicatorOffset = FLICK_INDICATOR_OFFSET * scale
+
+
+    inline val spawnedDuration = preemptTime - (targetTime - now)
+    inline val timeToTarget = targetTime - now
+    inline val alpha = min(spawnedDuration / fadeinTime, 1)
+    inline val progress = spawnedDuration / preemptTime
+    inline val relativePosition = timeToTarget / preemptTime
+    inline val noteX = targetX + cos(angle) * spawnDistance * relativePosition
+    inline val noteY = targetY + sin(angle) * spawnDistance * relativePosition
+    inline val notePosition = Point(noteX, noteY)
+    inline val targetPosition = Point(targetX, targetY)
+
+    var hit = false
+    var miss = false
+
+    callback shouldSpawn {
+        targetTime - now <= preemptTime
+    }
+
+    callback updateParallel {
+        Rectangle(targetPosition, size, size).drawSprite(TARGET_SPRITE, 100, alpha)
+        Rectangle(notePosition, size, size).drawSprite(FLICK_SPRITE, noteZ, alpha)
+        Rectangle(notePosition.translated(0, indicatorOffset), indicatorSize, indicatorSize)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
+        Rectangle(notePosition.translated(-indicatorOffset, 0), indicatorSize, indicatorSize).rotated(90.rad)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
+        Rectangle(notePosition.translated(0, -indicatorOffset), indicatorSize, indicatorSize).rotated(180.rad)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
+        Rectangle(notePosition.translated(indicatorOffset, 0), indicatorSize, indicatorSize).rotated(270.rad)
+            .drawSprite(FLICK_INDICATOR_SPRITE, noteZ + 0.1, alpha)
+
+        if (timeToTarget < -FLICK_WINDOW) {
+            miss = true
+        }
+
+        hit || miss
+    }
+
+    callback touch {
+        if (!touchOccupied) {
+            if (!hit && targetPosition.distanceTo(touchPosition) <= size &&
+                timeToTarget.abs() <= FLICK_WINDOW &&
+                touchVelocityR >= FLICK_VELOCITY) {
+                touchOccupied = true
+                hit = true
+                judgement = 1
+                play(FLICK_SOUND, MIN_EFFECT_TIME)
+                Burst(TARGET_SPRITE, BURST_DURATION, TARGET_BURST_SCALE, targetX, targetY, size, size, 200)
+                Burst(FLICK_SPRITE, BURST_DURATION, NOTE_BURST_SCALE, noteX, noteY, size, size, 200)
             }
         }
     }
