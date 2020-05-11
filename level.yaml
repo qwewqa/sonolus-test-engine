@@ -13,6 +13,11 @@ options: [
     "name": "Sudden",
     "type": "toggle",
     "def": 0
+  },
+  {
+    "name": "Transform",
+    "type": "toggle",
+    "def": 0
   }
 ]
 include:

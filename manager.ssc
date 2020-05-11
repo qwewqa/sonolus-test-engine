@@ -9,7 +9,10 @@ inline val hidden = getBooleanOption(0)
 inline val showBursts = !hidden and getBooleanOption(1)
 inline val sudden = getBooleanOption(2)
 inline val preemptFactor = 1 - SUDDEN_COEF * getNumberOption(2) // hack because too lazy to make if expressions work for now
+inline val transformMod = getNumberOption(3) // hack
 
+const TRANSFORM_ANGLE_COEF = 3.14159265359
+const TRANSFORM_COORD_COEF = 0.3
 const SUDDEN_COEF = 0.5
 
 script PreGameManager() {

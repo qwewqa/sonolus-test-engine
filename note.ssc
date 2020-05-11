@@ -33,8 +33,8 @@ archetype BasicNote :: #Note(targetX = 0, targetY = 0,
 script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
             _preemptTime, _fadeinTime, _scale, _visualScale, _noteZ, _showTarget) {
     inline val targetTime = Number(_targetTime)
-    inline val targetX = Number(_targetX)
-    inline val targetY = Number(_targetY)
+    inline val targetX = Number(_targetX) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * cos(targetTime))
+    inline val targetY = Number(_targetY) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * sin(targetTime))
     inline val spawnDistance = Number(_spawnDistance) * preemptFactor
     inline val preemptTime = Number(_preemptTime) * preemptFactor
     inline val fadeinTime = Number(_fadeinTime) * preemptFactor
@@ -43,7 +43,7 @@ script Note(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val visualScale = Number(_visualScale)
     inline val showTarget = Boolean(_showTarget)
 
-    val angle = Number(_angle).toRad
+    inline val angle = Number(_angle).toRad + TRANSFORM_ANGLE_COEF * transformMod * progress
     val size = NOTE_SIZE * scale
     val visualSize = size * visualScale
     val zOffset = (targetTime - preemptTime) / 100 // additional z offset so that stacked notes appear ok
@@ -111,8 +111,8 @@ archetype HoldNote :: #Hold(targetX = 0, targetY = 0,
 script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
             _preemptTime, _fadeinTime, _scale, _visualScale, _noteZ, _showTarget) {
     inline val targetTime = Number(_targetTime)
-    inline val targetX = Number(_targetX)
-    inline val targetY = Number(_targetY)
+    inline val targetX = Number(_targetX) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * cos(targetTime))
+    inline val targetY = Number(_targetY) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * sin(targetTime))
     inline val spawnDistance = Number(_spawnDistance) * preemptFactor
     inline val preemptTime = Number(_preemptTime) * preemptFactor
     inline val fadeinTime = Number(_fadeinTime) * preemptFactor
@@ -121,7 +121,7 @@ script Hold(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val visualScale = Number(_visualScale)
     inline val showTarget = Boolean(_showTarget)
 
-    val angle = Number(_angle).toRad
+    inline val angle = Number(_angle).toRad + TRANSFORM_ANGLE_COEF * transformMod * progress
     val size = NOTE_SIZE * scale
     val visualSize = size * visualScale
     val zOffset = (targetTime - preemptTime) / 100 // additional z offset so that stacked notes appear ok
@@ -187,8 +187,8 @@ archetype FlickNote :: #Flick(targetX = 0, targetY = 0,
 script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
              _preemptTime, _fadeinTime, _scale, _visualScale, _noteZ, _showTarget) {
     inline val targetTime = Number(_targetTime)
-    inline val targetX = Number(_targetX)
-    inline val targetY = Number(_targetY)
+    inline val targetX = Number(_targetX) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * cos(targetTime))
+    inline val targetY = Number(_targetY) + (TRANSFORM_COORD_COEF * transformMod * (1 - progress) * sin(targetTime))
     inline val spawnDistance = Number(_spawnDistance) * preemptFactor
     inline val preemptTime = Number(_preemptTime) * preemptFactor
     inline val fadeinTime = Number(_fadeinTime) * preemptFactor
@@ -197,7 +197,7 @@ script Flick(_targetTime, _targetX, _targetY, _spawnDistance, _angle,
     inline val visualScale = Number(_visualScale)
     inline val showTarget = Boolean(_showTarget)
 
-    val angle = Number(_angle).toRad
+    inline val angle = Number(_angle).toRad + TRANSFORM_ANGLE_COEF * transformMod * progress
     val size = NOTE_SIZE * scale
     val visualSize = size * visualScale
     val indicatorSize = FLICK_INDICATOR_SIZE * scale * visualScale
